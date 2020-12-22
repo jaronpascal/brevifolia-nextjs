@@ -9,7 +9,7 @@ export default function Layout(props) {
       "info_page"}`
     }
     style={{
-      backgroundColor: `${props.bgColor && props.bgColor}`,
+      backgroundColor: `${props.bgColor}`,
       color: `${props.pathname == "info" && 'white'}`
     }}
   >
@@ -17,7 +17,7 @@ export default function Layout(props) {
       siteTitle={props.siteTitle}
       siteDescription={props.siteDescription}
     />
-    <Header siteTitle={props.siteTitle} />
+    <Header siteTitle={props.siteTitle} travels={props.travels} />
     <div className="content">{props.children}</div>
     <style jsx>
       {`

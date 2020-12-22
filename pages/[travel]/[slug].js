@@ -173,8 +173,8 @@ export default function BlogTemplate({ frontmatter, markdownBody, siteTitle }) {
 }
 
 export async function getStaticProps({ ...ctx }) {
-  const { slug } = ctx.params
-  const content = await import(`../../posts/${slug}.md`)
+  const { slug, travel } = ctx.params
+  const content = await import(`../../posts/${travel}/${slug}.md`)
   const config = await import(`../../data/config.json`)
   const data = matter(content.default)
 
@@ -194,14 +194,16 @@ export async function getStaticPaths() {
   //remove path and extension to leave filename only
   const blogSlugs = blogs.map(file =>
     file
-      .split('/')[1]
+      .split('/')
+      .slice(1)
+      .join('/')
       .replace(/ /g, '-')
       .slice(0, -3)
       .trim()
   )
 
   // create paths with `slug` param
-  const paths = blogSlugs.map(slug => `/blog/${slug}`)
+  const paths = blogSlugs.map(slug => `/${slug}`)
   return {
     paths,
     fallback: false,

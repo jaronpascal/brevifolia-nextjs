@@ -1,7 +1,54 @@
 import Link from 'next/link'
 import ReactMarkdown from 'react-markdown'
+import React, { useEffect, useState, useRef } from 'react'
 
-const BlogList = ({ allBlogs }) => {
+const BlogList = (props) => {
+  const { allBlogs, travel } = props;
+  console.log("BLOGLIST")
+  console.log(travel)
+
+  
+  const blogsToViewCalculator = numberOfPages => {
+    const size = 5 * numberOfPages
+    return allBlogs.slice(0, size)
+  }
+  const [page, setPage] = useState(1)
+  const [postList, setPostList] = useState(blogsToViewCalculator(1))
+
+  const loader = useRef(null)
+
+  useEffect(() => {
+    setPostList(blogsToViewCalculator(1));
+  }, [props])
+
+  useEffect(() => {
+    var options = {
+      root: null,
+      rootMargin: '0px',
+      threshold: 0.5,
+    }
+    // initialize IntersectionObserver
+    // and attaching to Load More div
+    const observer = new IntersectionObserver(handleObserver, options)
+    if (loader.current) {
+      observer.observe(loader.current)
+    }
+  }, [])
+
+  useEffect(() => {
+    setPostList(blogsToViewCalculator(page))
+  }, [page])
+
+  const handleObserver = entities => {
+    console.log('JA')
+    const target = entities[0]
+
+    if (target.isIntersecting) {
+      setPage(page => page + 1)
+      console.log(target)
+    }
+  }
+
   function truncateSummary(content) {
     return content.slice(0, 200).trimEnd()
   }
@@ -13,10 +60,14 @@ const BlogList = ({ allBlogs }) => {
 
   return (
     <>
+      <p>{travel}</p>
       <ul className="list">
-        {allBlogs.length > 1 &&
-          allBlogs.map(post => (
-            <Link key={post.slug} href={{ pathname: `/blog/${post.slug}` }}>
+        {postList.length >= 1 &&
+          postList.map(post => (
+            <Link
+              key={post.slug}
+              href={{ pathname: `/${post.travel}/${post.slug}` }}
+            >
               <a>
                 <li>
                   <div className="hero_image">
@@ -27,7 +78,11 @@ const BlogList = ({ allBlogs }) => {
                   </div>
                   <div className="blog__info">
                     <h2>{post.frontmatter.title}</h2>
-                    <h3> {reformatDate(post.frontmatter.date)}</h3>
+                    <h3>
+                      {post.travel}
+                      {' - '}
+                      {reformatDate(post.frontmatter.date)}
+                    </h3>
                     <p>
                       <ReactMarkdown
                         source={truncateSummary(post.markdownBody)}
@@ -39,6 +94,9 @@ const BlogList = ({ allBlogs }) => {
             </Link>
           ))}
       </ul>
+      <div className="loading" ref={loader}>
+        <h2>Load More</h2>
+      </div>
       <style jsx>
         {`
           margin-bottom: 0;

@@ -2,12 +2,15 @@ import matter from 'gray-matter'
 import Layout from '../components/Layout'
 import BlogList from '../components/BlogList'
 
+const { readdirSync } = require('fs')
+
 const Index = props => {
   return (
     <Layout
       pathname="/"
       siteTitle={props.title}
       siteDescription={props.description}
+      travels={props.travels}
     >
       <section>
         <BlogList allBlogs={props.allBlogs} />
@@ -32,6 +35,10 @@ export async function getStaticProps() {
         .split('.')
         .slice(0, -1)
         .join('.')
+      const travel = key
+        .split('/')[1]
+        .replace(/ /g, '-')
+        .trim()
       const value = values[index]
       // Parse yaml metadata & markdownbody in document
       const document = matter(value.default)
@@ -39,16 +46,20 @@ export async function getStaticProps() {
         frontmatter: document.data,
         markdownBody: document.content,
         slug,
+        travel,
       }
     })
     return data
   })(require.context('../posts', true, /\.md$/))
+
+  const travels = readdirSync("./posts");
 
   return {
     props: {
       allBlogs: posts,
       title: siteConfig.default.title,
       description: siteConfig.default.description,
+      travels
     },
   }
 }
