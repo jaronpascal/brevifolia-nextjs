@@ -1,15 +1,16 @@
 import Link from 'next/link'
 import ReactMarkdown from 'react-markdown'
 import React, { useEffect, useState, useRef } from 'react'
+import CircularProgress from '@material-ui/core/CircularProgress'
 
 const BlogList = (props) => {
-  const { allBlogs, travel } = props;
-  console.log("BLOGLIST")
-  console.log(travel)
+  const { allBlogs, travel } = props
 
-  
-  const blogsToViewCalculator = numberOfPages => {
-    const size = 5 * numberOfPages
+  const blogsToViewCalculator = (numberOfPages) => {
+    let size = 5 * numberOfPages
+    if (size >= allBlogs.length) {
+      size = allBlogs.length
+    }
     return allBlogs.slice(0, size)
   }
   const [page, setPage] = useState(1)
@@ -18,7 +19,7 @@ const BlogList = (props) => {
   const loader = useRef(null)
 
   useEffect(() => {
-    setPostList(blogsToViewCalculator(1));
+    setPostList(blogsToViewCalculator(1))
   }, [props])
 
   useEffect(() => {
@@ -39,12 +40,12 @@ const BlogList = (props) => {
     setPostList(blogsToViewCalculator(page))
   }, [page])
 
-  const handleObserver = entities => {
+  const handleObserver = (entities) => {
     console.log('JA')
     const target = entities[0]
 
     if (target.isIntersecting) {
-      setPage(page => page + 1)
+      setPage((page) => page + 1)
       console.log(target)
     }
   }
@@ -63,7 +64,7 @@ const BlogList = (props) => {
       <p>{travel}</p>
       <ul className="list">
         {postList.length >= 1 &&
-          postList.map(post => (
+          postList.map((post) => (
             <Link
               key={post.slug}
               href={{ pathname: `/${post.travel}/${post.slug}` }}
@@ -94,8 +95,13 @@ const BlogList = (props) => {
             </Link>
           ))}
       </ul>
-      <div className="loading" ref={loader}>
-        <h2>Load More</h2>
+      <div
+        className={
+          postList.length === allBlogs.length ? 'hide loading' : 'loading'
+        }
+        ref={loader}
+      >
+        <CircularProgress />
       </div>
       <style jsx>
         {`
@@ -112,6 +118,14 @@ const BlogList = (props) => {
           a:hover li .blog__info p {
             transform: translateX(10px);
             transition: transform 0.5s ease-out;
+          }
+          .loading {
+            height: 70px;
+            text-align: center;
+            padding: 15px;
+          }
+          .hide {
+            display: none;
           }
           .hero_image {
             width: 100%;

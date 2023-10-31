@@ -1,26 +1,29 @@
-import matter from 'gray-matter'
+import React from 'react'
+import App from 'next/app'
 import Layout from '../components/Layout'
-import BlogList from '../components/BlogList'
 
-const { readdirSync } = require('fs')
+class MyApp extends App {
+  render() {
+    const { Component, pageProps } = this.props
 
-const Index = (props) => {
-  return (
-    <section>
-      <BlogList allBlogs={props.allBlogs} />
-    </section>
-  )
+    return (
+      <Layout>
+        <Component {...pageProps} />
+      </Layout>
+    )
+  }
 }
 
-export default Index
+export default MyApp
 
-export async function getStaticProps() {
+export async function getStaticProps({ ...ctx }) {
+  const { travel } = ctx.params
+  console.log(`../posts/${travel}`)
   const siteConfig = await import(`../data/config.json`)
   //get posts & context from folder
   const posts = ((context) => {
-    const keys = context.keys()
+    let keys = context.keys()
     const values = keys.map(context)
-
     const data = keys.map((key, index) => {
       // Create slug from filename
       const slug = key
@@ -40,9 +43,12 @@ export async function getStaticProps() {
       }
     })
     return data
-  })(require.context('../posts', true, /\.md$/))
+  })(require.context('../posts/', true, /\.md$/))
 
   const travels = readdirSync('./posts')
+
+  console.log(travel)
+  console.log(travels)
 
   return {
     props: {
@@ -50,6 +56,7 @@ export async function getStaticProps() {
       title: siteConfig.default.title,
       description: siteConfig.default.description,
       travels,
+      currentTravel: travel,
     },
   }
 }

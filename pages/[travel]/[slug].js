@@ -1,11 +1,24 @@
 import * as React from 'react'
 import matter from 'gray-matter'
 import ReactMarkdown from 'react-markdown'
+import Button from '@material-ui/core/Button'
+import Link from 'next/link'
 const glob = require('glob')
+const { readdirSync } = require('fs')
 
 import Layout from '../../components/Layout'
 
-export default function BlogTemplate({ frontmatter, markdownBody, siteTitle }) {
+export default function BlogTemplate({
+  frontmatter,
+  markdownBody,
+  siteTitle,
+  previous,
+  next,
+  travels,
+  currentTravel,
+}) {
+  console.log(travels)
+
   function reformatDate(fullDate) {
     const date = new Date(fullDate)
     return date.toDateString().slice(4)
@@ -20,7 +33,11 @@ export default function BlogTemplate({ frontmatter, markdownBody, siteTitle }) {
   if (!frontmatter) return <></>
 
   return (
-    <Layout siteTitle={siteTitle}>
+    <Layout
+      siteTitle={siteTitle}
+      travels={travels}
+      currentTravel={currentTravel}
+    >
       <article className="blog">
         <figure className="blog__hero">
           <img
@@ -28,6 +45,18 @@ export default function BlogTemplate({ frontmatter, markdownBody, siteTitle }) {
             alt={`blog_hero_${frontmatter.title}`}
           />
         </figure>
+        <div className="navigationBar">
+          {previous && (
+            <Link href={`/${previous}`} passHref>
+              <Button>Vorige</Button>
+            </Link>
+          )}
+          {next && (
+            <Link href={`/${next}`} passHref>
+              <Button>Volgende</Button>
+            </Link>
+          )}
+        </div>
         <div className="blog__info">
           <h1>{frontmatter.title}</h1>
           <h3>{reformatDate(frontmatter.date)}</h3>
@@ -39,6 +68,12 @@ export default function BlogTemplate({ frontmatter, markdownBody, siteTitle }) {
       </article>
       <style jsx>
         {`
+          .navigationBar {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            padding: 5px 25px 0;
+          }
           .blog h1 {
             margin-bottom: 0.7rem;
           }
@@ -59,10 +94,11 @@ export default function BlogTemplate({ frontmatter, markdownBody, siteTitle }) {
           }
 
           .blog__info {
-            padding: 1.5rem 1.25rem;
             width: 100%;
             max-width: 768px;
             margin: 0 auto;
+            text-align: center;
+            padding: 1rem 0 2rem 0;
           }
           .blog__info h1 {
             margin-bottom: 0.66rem;
@@ -144,7 +180,7 @@ export default function BlogTemplate({ frontmatter, markdownBody, siteTitle }) {
             }
             .blog__info {
               text-align: center;
-              padding: 2rem 0;
+              padding: 1rem 0 2rem 0;
             }
             .blog__info h1 {
               max-width: 500px;
@@ -160,7 +196,7 @@ export default function BlogTemplate({ frontmatter, markdownBody, siteTitle }) {
               height: 70vh;
             }
             .blog__info {
-              padding: 3rem 0;
+              padding: 2rem 0 3rem 0;
             }
             .blog__footer {
               padding: 2rem 2rem 3rem 2rem;
@@ -177,12 +213,53 @@ export async function getStaticProps({ ...ctx }) {
   const content = await import(`../../posts/${travel}/${slug}.md`)
   const config = await import(`../../data/config.json`)
   const data = matter(content.default)
+  const currentTime = new Date(data.data.date)
 
+  const blogs = glob.sync(`posts/${travel}/*.md`)
+  let next, nextTime, previous, previousTime
+
+  for await (let blog of blogs) {
+    const content = await import(`../../${blog}`)
+    const blogTime = new Date(matter(content.default).data.date)
+    if (currentTime > blogTime && (!previousTime || previousTime < blogTime)) {
+      previousTime = blogTime
+      previous = blog
+    }
+    if (currentTime < blogTime && (!nextTime || nextTime > blogTime)) {
+      nextTime = blogTime
+      next = blog
+    }
+  }
+
+  const nextLink = !next
+    ? null
+    : `./${next
+        .split('/')
+        .slice(1)
+        .join('/')
+        .replace(/ /g, '-')
+        .slice(0, -3)
+        .trim()}`
+
+  const previousLink = !previous
+    ? null
+    : `./${previous
+        .split('/')
+        .slice(1)
+        .join('/')
+        .replace(/ /g, '-')
+        .slice(0, -3)
+        .trim()}`
+  const travels = readdirSync('./posts')
   return {
     props: {
       siteTitle: config.title,
       frontmatter: data.data,
       markdownBody: data.content,
+      next: nextLink,
+      previous: previousLink,
+      travels,
+      currentTravel: travel,
     },
   }
 }
@@ -192,18 +269,12 @@ export async function getStaticPaths() {
   const blogs = glob.sync('posts/**/*.md')
 
   //remove path and extension to leave filename only
-  const blogSlugs = blogs.map(file =>
-    file
-      .split('/')
-      .slice(1)
-      .join('/')
-      .replace(/ /g, '-')
-      .slice(0, -3)
-      .trim()
+  const blogSlugs = blogs.map((file) =>
+    file.split('/').slice(1).join('/').replace(/ /g, '-').slice(0, -3).trim()
   )
 
   // create paths with `slug` param
-  const paths = blogSlugs.map(slug => `/${slug}`)
+  const paths = blogSlugs.map((slug) => `/${slug}`)
   return {
     paths,
     fallback: false,

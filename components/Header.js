@@ -11,23 +11,13 @@ import ExpandMore from '@material-ui/icons/ExpandMore'
 import Collapse from '@material-ui/core/Collapse'
 
 export default function Header(props) {
-  const [state, setState] = React.useState(false)
-  const toggleDrawer = (drawerState) => (event) => {
-    if (
-      event &&
-      event.type === 'keydown' &&
-      (event.key === 'Tab' || event.key === 'Shift')
-    ) {
-      return
-    }
-
-    setState(drawerState)
-  }
-  const [open, setOpen] = React.useState(false)
+  const [open, setOpen] = React.useState()
 
   const handleClick = () => {
     setOpen(!open)
   }
+
+  console.log('Travel' + props.currentTravel)
 
   return (
     <header className="header">
@@ -38,38 +28,17 @@ export default function Header(props) {
           </Button>
         </Link>
 
-        {/* <div>
-          <React.Fragment key={'bottom'}>
-            <Button onClick={toggleDrawer(true)}>{'bottom'}</Button>
-            <SwipeableDrawer
-              anchor={'bottom'}
-              open={state}
-              onClose={toggleDrawer(false)}
-              onOpen={toggleDrawer(true)}
-            >
-              <List>
-                <ListItem button key={'bla'}>
-                  <ListItemText primary={'bla'} />
-                </ListItem>
-                <ListItem button key={'bla'}>
-                  <ListItemText primary={'bla'} />
-                </ListItem>
-              </List>
-            </SwipeableDrawer>
-          </React.Fragment>
-        </div> */}
-
         <div className="fullScreenMenu">
           <List>
             <ListItem button onClick={handleClick}>
-              <ListItemText primary="Inbox" />
+              <ListItemText primary="Reizen" />
               {open ? <ExpandMore /> : <ExpandLess />}
             </ListItem>
             <Collapse in={open} timeout="auto" unmountOnExit>
               <List component="div" disablePadding>
                 {props.travels?.map((travel, i) => {
                   return (
-                    <ListItem button>
+                    <ListItem button selected={props.currentTravel === travel}>
                       <Link key={i} href={'/' + travel}>
                         <ListItemText primary={travel} />
                       </Link>

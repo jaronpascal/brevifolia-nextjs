@@ -5,20 +5,23 @@ const { readdirSync } = require('fs')
 
 const glob = require('glob')
 
-const Index = props => {
-  const allBlogs = props.allBlogs.filter(blog => blog.travel === props.currentTravel)
+const Index = (props) => {
+  const allBlogs = props.allBlogs.filter(
+    (blog) => blog.travel === props.currentTravel
+  )
   return (
-      <Layout
-        pathname="/"
-        siteTitle={props.title}
-        siteDescription={props.description}
-        travels={props.travels}
-      >
-        <section>
-          <BlogList allBlogs={allBlogs} travel={props.currentTravel} />
-        </section>
-      </Layout>
-    )
+    <Layout
+      pathname="/"
+      siteTitle={props.title}
+      siteDescription={props.description}
+      travels={props.travels}
+      currentTravel={props.currentTravel}
+    >
+      <section>
+        <BlogList allBlogs={allBlogs} travel={props.currentTravel} />
+      </section>
+    </Layout>
+  )
 }
 
 export default Index
@@ -28,7 +31,7 @@ export async function getStaticProps({ ...ctx }) {
   console.log(`../../posts/${travel}`)
   const siteConfig = await import(`../../data/config.json`)
   //get posts & context from folder
-  const posts = (context => {
+  const posts = ((context) => {
     let keys = context.keys()
     const values = keys.map(context)
     const data = keys.map((key, index) => {
@@ -38,10 +41,7 @@ export async function getStaticProps({ ...ctx }) {
         .split('.')
         .slice(0, -1)
         .join('.')
-      const travel = key
-        .split('/')[1]
-        .replace(/ /g, '-')
-        .trim()
+      const travel = key.split('/')[1].replace(/ /g, '-').trim()
       const value = values[index]
       // Parse yaml metadata & markdownbody in document
       const document = matter(value.default)
@@ -55,9 +55,10 @@ export async function getStaticProps({ ...ctx }) {
     return data
   })(require.context('../../posts/', true, /\.md$/))
 
-  const travels = readdirSync("./posts");
+  const travels = readdirSync('./posts')
 
-  console.log(travel);
+  console.log(travel)
+  console.log(travels)
 
   return {
     props: {
@@ -65,7 +66,7 @@ export async function getStaticProps({ ...ctx }) {
       title: siteConfig.default.title,
       description: siteConfig.default.description,
       travels,
-      currentTravel: travel
+      currentTravel: travel,
     },
   }
 }
@@ -75,15 +76,12 @@ export async function getStaticPaths() {
   const blogs = glob.sync('posts/*')
 
   //remove path and extension to leave filename only
-  const blogSlugs = blogs.map(file =>
-    file
-      .split('/')[1]
-      .replace(/ /g, '-')
-      .trim()
+  const blogSlugs = blogs.map((file) =>
+    file.split('/')[1].replace(/ /g, '-').trim()
   )
 
   // create paths with `slug` param
-  const paths = blogSlugs.map(slug => `/${slug}`)
+  const paths = blogSlugs.map((slug) => `/${slug}`)
   return {
     paths,
     fallback: false,
